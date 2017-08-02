@@ -2,12 +2,11 @@
 
 Code and data used in the paper with Kurt L. Kreuger.
 
-### Contents
 
-1. Anylogic
- - Anylogic simulation file (.alp)
+### Anylogic
+ - Anylogic (v 8.1) simulation file (.alp)
  - Compressed (7z) simulation output (.csv)
 
-2. R
- - Code used to process generated data from Anylogic
+### R
+ - Code used to process data generated in Anylogic
  - Rdata files with formated data
