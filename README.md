@@ -1,12 +1,18 @@
-## Assessing Selection and Social Inﬂuence Estimates from the SIENA Model
+## Assessing Selection and Social Influence Estimates from the SIENA Model
 
 Code and data used in the paper with Kurt L. Kreuger.
 
-
 ### Anylogic
- - Anylogic (v 8.1) simulation file (.alp)
- - Compressed (7z) simulation output (.csv)
+
+ - [**Anylogic**](https://www.anylogic.com/downloads/) simulation file (.alp)
+ - All the models can be run using the [Personal Learning Edition (PLE) Anylogic Version](https://www.anylogic.com/downloads/).
+ - The data can be generated running the experiments defined in the Anylogic file. They used the same random seed to create replicates.
 
 ### R
- - Code used to process data generated in Anylogic
- - Rdata files with formated data
+
+ - Code used to process data generated in Anylogic.
+ - Rdata files with [data.table](https://github.com/Rdatatable/data.table/wiki) objects containing the data generated using Anylogic
+
+### Feedback
+
+If you find bugs or have any suggestions, please contact us directly to sebastian.daza@gmail.com.
