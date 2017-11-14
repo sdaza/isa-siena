@@ -15,4 +15,4 @@ Code and data used in the paper with Kurt L. Kreuger.
 
 ### Feedback
 
-If you find bugs or have any suggestions, please contact us directly to sebastian.daza@gmail.com.
+If you find bugs or have any suggestions, please write to sebastian.daza@gmail.com.
