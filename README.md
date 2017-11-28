@@ -1,6 +1,6 @@
 ## Assessing Selection and Social Influence Estimates from the SIENA Model
 
-Code and data used in the paper with Kurt L. Kreuger.
+Code and data used in the paper with L. Kurt  Kreuger.
 
 ### Anylogic
 
