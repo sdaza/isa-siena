@@ -1,0 +1,302 @@
+########################################################
+# rsiena estimation using social norm mechanism
+# author: sebastian daza
+# version: 1.00
+#######################################################
+
+# this is run using multiple linux servers
+
+#+ clean workspace and load libraries
+rm(list=ls(all=TRUE))
+
+# libraries
+library(data.table)
+library(RSienaTest)
+library(texreg)
+library(igraph)
+library(sna)
+library(sdazar)
+library(colorout)
+library(SGCS)
+
+# linstat
+setwd("/home/s/sdaza/00projects/siena/")
+source("/home/s/sdaza/00projects/siena/R/functions/auxiliary-functions.R")
+results_path <- "R/results/norms/"
+
+#+ experiment information (important)
+scenarios <- c("B", "I", "S","B+CR", "I+CR", "S+CR") # iterations
+specifications <- c("N+S", "N+I", "N+S+I", "N+S+I+D", "N+S+I+R",
+                    "S+I+R+D", "N+S+I+R+D")
+
+# create tailored grid
+grid <- data.table(iter = rep(3,4), sp = c(3,4,5,7))
+grid
+
+#+ set up values ISA
+agents <- 200 # define number of agents to create network
+# (nodes <- parallel::detectCores() / 2)
+nodes <- 5
+wi <- 500; le <- 500 # dimensions of space
+
+max_rep <- 100
+nwaves <- c(6,7,8,9) # four waves
+
+#+ siena setup
+sim <- 1000 # number of simulations
+
+# read data (b, n, d, p)
+load("R/data/socialNorms.Rdata")
+p # paramaters
+
+# track path
+track_path <- paste0(results_path, "track.Rdata")
+
+# track function
+keeptrack <- function(track_path) {
+
+  if ( file.exists(track_path) ) {
+    load(track_path) } else {
+       track <- data.table() }
+
+  # look for files
+  mpattern <- paste0("rr_iter_", scen, "_spec_", spec)
+  files <- list.files(path = results_path, pattern = mpattern)
+  areplicates <- NULL
+
+  if (length(files) > 0) {
+  pat <- "(.+)(rep_)([0-9]+)(.*)"
+  areplicates <- sort(as.numeric(sapply(files, function(x) sub(pat, "\\3", x))))
+  }
+
+  if (length(areplicates) > 0) {
+    track <- rbind(track,
+    data.table(iter = niter, replicate = areplicates,
+      running = 0, finished = 1))
+    track <- unique(track)
+    save(track, file = track_path)
+  }
+
+  # define replicates to be done
+  rreplicates <- NULL
+  if (nrow(track) > 0 ) {
+  rreplicates <- track[running == 1 & finished == 0, replicate]
+  }
+  sreplicates <- unique(c(areplicates, rreplicates))
+  treplicates <- 1:max_rep
+  if (is.null(sreplicates)) {
+    rep <- treplicates
+  } else {
+    rep <- treplicates[!treplicates %in% sreplicates] # pending replicates
+  }
+
+  save(track, file = track_path)
+  return(rep)
+}
+
+###########################################################
+#+ loop through scenario and specification and replication
+###########################################################
+
+for (j in 1:nrow(grid)) {
+
+# get scenario (iteration) and siena specification
+scen <- grid[j, iter]
+spec <- grid[j, sp]
+
+# adjust accordingly
+ print(paste0(":::::::::::::::: ", paste0(scen, "-",  spec)))
+
+ # name iteration
+ niter <- paste0(scen, "-", spec)
+
+ rep <- keeptrack(track_path)
+ if (length(rep) == 0) { next }
+
+# loop through replications
+for (h in rep) {
+
+# update replicates
+rep <- keeptrack(track_path)
+
+# rewrite h
+if (length(rep) > 0 ) { h <- rep[1] } else { next }
+
+print(paste0(". . . starting iteration ", scen, " spec ", spec, " rep ", h))
+
+# update track
+load(track_path)
+track <- rbind(track,
+  data.table(iter = niter, replicate = h, running = 1, finished = 0))
+setkey(track, iter, replicate)
+save(track, file = track_path )
+
+# extract data
+tn <- n[iteration == scen & replication == h] # network
+tb <- b[iteration == scen & replication == h] # behavior
+td <- d[iteration == scen & replication == h] # position
+
+#+ loop to create networks and get behavior
+gnet <- list()
+net <- list()
+attr <- list()
+dist <- list()
+
+# loop to get data in the right format
+for (i in 1:length(nwaves)) {
+    t <- as.data.frame(tn[measurement == nwaves[i], 1:2])
+    g <- graph.data.frame(t, vertices = 1:agents, directed = TRUE)
+    m <- get.adjacency(g, sparse = FALSE)
+    gnet[[i]] <- g
+    net[[i]] <- m
+    attr[[i]] <- tb[measurement == nwaves[i], list(id, mybehavior, radius, tendency)]
+    xy <- list(x  = td[measurement == nwaves[i], x], y = td[measurement == nwaves[i], y])
+    pp <- as.ppp(xy, c(0, wi, 0, le))
+    dpp <- log(pairwise_distances(pp, toroidal = TRUE)) # log of toroidal distances
+    dm <-  matrix(0, agents, agents)
+    dm[lower.tri(dm, diag = FALSE)] <- dpp
+    dm[upper.tri(dm)] <- t(dm)[upper.tri(dm)] # create the full matrix
+    dist[[i]] <- as.matrix(dm)
+    isSymmetric(dist[[i]]) # check the matrix is symmetric
+}
+
+remove(t, g, m, xy, pp)
+
+#  dependent behavior variable
+at <- rbindlist(attr, idcol = "time")
+at[, mybehavior := as.numeric(mybehavior)]
+at <- dcast(at, id + radius + tendency ~ time, value.var = c("mybehavior"), )
+beh <- as.matrix(at[, as.character(seq_along(nwaves)), with = FALSE])
+
+# use the corresponding specification and save model
+#+ set data for network data
+subnet <- net[seq_along(nwaves)]
+net_array <- array(unlist(subnet), dim = c(nrow(net[[1]]), ncol(net[[1]]),
+                                           length(subnet)))
+
+network <- sienaDependent(net_array)
+
+# behavior
+beh <- sienaDependent(beh, type = "behavior")
+
+##################
+# covariates
+#################
+
+# radius covariate
+radius <- coCovar(log(at$radius))
+
+# tendency (excluded for now)
+tendency <- coCovar(ifelse(at$tendency == "true", 1, 0))
+
+# distance
+subdist <- dist[1:(length(nwaves)-1)]
+if (length(nwaves) > 2) {
+      dist_array <- array(unlist(subdist),
+                      dim = c(nrow(dist[[1]]), ncol(dist[[1]]), length(subdist)))
+      distance <- varDyadCovar(dist_array)
+      }
+      if (length (nwaves) == 2) {
+      distance <- coDyadCovar(subdist[[1]])
+      }
+
+##########################################
+# create data object by specification
+##########################################
+
+if (spec %in% 1:3) {
+      myData <- sienaDataCreate(network, beh, tendency)
+}
+if (spec == 4) {
+      myData <- sienaDataCreate(network, beh, distance, tendency)
+      }
+if (spec == 5) {
+      myData <- sienaDataCreate(network, beh, radius, tendency)
+}
+if (spec %in% 6:7) {
+      myData <- sienaDataCreate(network, beh, radius, distance, tendency)
+}
+
+# create effects object for model specification
+myEffects <- getEffects(myData)
+
+# varying density by wave
+myEffects <- includeTimeDummy(myEffects, density, timeDummy = "all")
+
+# structural network effects
+if (spec != 6) {
+myEffects <- includeEffects(myEffects, recip, outAct, outPop, inPop,
+                       fix = FALSE, test = FALSE, include = TRUE)
+myEffects <- includeEffects(myEffects, cycle3,
+                            fix = FALSE, test = FALSE, include = TRUE)
+myEffects <- includeEffects(myEffects, transTrip, transRecTrip,
+                            fix = FALSE, test = FALSE, include = TRUE)
+myEffects <- setEffect(myEffects, gwespFF, parameter = 69) # versus 69
+}
+
+# distance
+if (spec %in% c(4,6,7)) {
+myEffects <- includeEffects(myEffects, X, interaction1 = "distance",
+                          fix = FALSE, test = FALSE,  include = TRUE)
+}
+
+# radius
+if (spec %in% c(5,6,7)) {
+myEffects <- includeEffects(myEffects, egoX, interaction1 = "radius",
+                          fix = FALSE, test = FALSE,  include = TRUE)
+}
+
+# interaction distance / radius
+if (spec %in% c(6,7)) {
+myEffects  <- includeInteraction(myEffects, X, egoX,
+                               interaction1 = c("distance", "radius"),
+                               fix = FALSE, test = FALSE, include = TRUE)
+}
+
+# selection (similarity)
+if (spec %in% c(1,3,4,5,6,7)) {
+myEffects <- includeEffects(myEffects, egoX, altX, simX, # similarity
+# myEffects <- includeEffects(myEffects, egoX, altX, altSqX, egoXaltX, # interaction
+                            interaction1 = "beh", fix = FALSE,
+                            test = FALSE, include = TRUE)
+}
+
+# influence (assimilation)
+if (spec %in% c(2,3,4,5,6,7)) {
+myEffects <- includeEffects(myEffects, name = "beh", avAlt, # average alter
+# myEffects <- includeEffects(myEffects, name = "beh", avSim, # average similiary
+                            interaction1 = "network",
+                            fix = FALSE, test = FALSE, include = TRUE)
+}
+
+myEffects <- includeEffects(myEffects, effFrom,
+  interaction1 = 'tendency', name = "beh", fix = FALSE, test = FALSE, include = TRUE)
+
+#+ define algorithm
+# n3 suggested to be 3000 for publication
+myalgorithm <- sienaAlgorithmCreate(nsub = 4, n3 = sim)
+
+# save results
+model <- list()
+
+model[[as.character(h)]] <- tryCatch(
+  siena07ToConvergence(myalgorithm, dat = myData,
+    eff = myEffects, nodes = nodes), error = function (e) e)
+
+rr <- paste0(results_path, "rr_iter_", scen, "_spec_", spec, "_rep_", h, ".rds")
+tryCatch(saveRDS(model, file = rr), error = function (e) print("Error saving models!"))
+
+print(screenreg(model[[as.character(h)]]))
+print(paste0(". . . ending iteration ", scen, " spec ", spec, " rep ", h))
+
+# update track
+load(track_path)
+track[iter == niter & replicate == h, c('running', 'finished') := list(0, 1)]
+track <- unique(track)
+save(track, file = track_path)
+
+} # end loop through replications
+
+} # end loop through iteration/specs
+
+###########################################################
