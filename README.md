@@ -12,4 +12,4 @@
 ### R
 
  - [R Code](https://github.com/sdaza/siena-paper/tree/master/R) used to process the data generated in [**Anylogic**](https://www.anylogic.com/downloads/).
- - [`Rdata` files](https://github.com/sdaza/siena-paper/tree/master/R/data) are [data.table](https://github.com/Rdatatable/data.table/wiki) objects containing the data generated using Anylogic
+ - [`Rdata` files](https://github.com/sdaza/siena-paper/tree/master/data) are [data.table](https://github.com/Rdatatable/data.table/wiki) objects containing the data generated using Anylogic
