@@ -4,9 +4,6 @@
 # version: 1.00
 #######################################################
 
-#+ clean workspace and load libraries
-#rm(list=ls(all=TRUE))
-
 # libraries
 library(data.table)
 

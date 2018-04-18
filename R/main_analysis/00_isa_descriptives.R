@@ -4,9 +4,6 @@
 # 2017-05-05
 #######################################################
 
-#+ clean workspace and load libraries
-# rm(list=ls(all=TRUE))
-
 #+ libraries
 library(data.table)
 library(RSienaTest)

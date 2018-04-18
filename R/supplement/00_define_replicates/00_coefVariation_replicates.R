@@ -4,8 +4,6 @@
 # version: 1.00
 #######################################################
 
-# rm(list=ls(all=TRUE))
-
 #+ libraries
 library(data.table)
 library(igraph)

@@ -7,9 +7,6 @@
 
 # run using multiple linux servers
 
-#+ clean workspace and load libraries
-# rm(list=ls(all=TRUE))
-
 # libraries
 library(data.table)
 library(RSienaTest)
