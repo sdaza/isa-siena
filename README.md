@@ -1,4 +1,4 @@
-## Agent-Based Models for Assessing Complex Statistical Models: An Example Evaluating Selection and Social Influence Estimates from the SIENA model
+## Agent-Based Models for Assessing Complex Statistical Models: An Example Evaluating Selection and Social Influence Estimates from SIENA
 
 - Code and data to reproduce paper with L. Kurt  Kreuger.
 - ISA: Influence Selection Agent-based Model
