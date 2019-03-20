@@ -1,8 +1,8 @@
 ## Agent-Based Models for Assessing Complex Statistical Models: An Example Evaluating Selection and Social Influence Estimates from SIENA
 
-- Authors: Sebastian Daza and L. Kurt Kreuger
-- Code and data to reproduce results
+Code and data to reproduce results.
 
+- Authors: Sebastian Daza and L. Kurt Kreuger
 - ISA: Influence Selection Agent-based Model
 - SIENA: [Simulation Investigation for Empirical Network Analysis](https://www.stats.ox.ac.uk/~snijders/siena/)
 
