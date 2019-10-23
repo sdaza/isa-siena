@@ -15,4 +15,8 @@ Code and data to reproduce results.
 ### R
 
  - [R Code](https://github.com/sdaza/isa-siena/tree/master/R) used to process the data generated in [**Anylogic**](https://www.anylogic.com/downloads/).
- - [RData files](https://github.com/sdaza/isa-siena/tree/master/data) are [data.table](https://github.com/Rdatatable/data.table/wiki) objects containing the data generated using Anylogic
+ - [RData files](https://github.com/sdaza/isa-siena/tree/master/data) are [data.table](https://github.com/Rdatatable/data.table/wiki) objects containing the data generated using Anylogic. The data.table are:
+    - `b`: behavior data
+    - `d`: distance between agents
+    - `n`: network data
+    - `p`: experimental data
