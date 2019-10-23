@@ -19,5 +19,5 @@ Code and data to reproduce results.
     - `b`: behavior data
     - `d`: distance between agents
     - `n`: network data
-    - `p`: experimental data
+    - `p`: experimental info
 
